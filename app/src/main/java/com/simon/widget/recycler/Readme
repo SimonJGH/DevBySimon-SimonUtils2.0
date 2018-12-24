@@ -1,0 +1,38 @@
+①：创建android.support.v7.widget.helper包
+    导入文件：CompatItemTouchHelper
+
+②：attrs
+    <declare-styleable name="SwipeMenuLayout">
+            <attr name="leftViewId" format="reference" />
+            <attr name="rightViewId" format="reference" />
+            <attr name="contentViewId" format="reference" />
+    </declare-styleable>
+
+③：dimens
+    <resources>
+        <dimen name="swipe_item_width">100dp</dimen>
+        <dimen name="item_height">60dp</dimen>
+        <dimen name="item_margin">10dp</dimen>
+    </resources>
+
+④：layout
+    item_menu.xml
+    recyclerview_item_default.xml  注意修改引用布局的报名
+
+
+⑤：drawable
+    linearlayout_divider.xml
+    select_white.xml
+
+    R.mipmap.ic_action_delete.png
+
+⑥：colors
+     <color name="white_normal">#FFFFFFFF</color>
+     <color name="white_pressed">#FFCFCFCF</color>
+     <color name="red_normal">#FF0000</color>
+     <color name="red_pressed">#FF6666</color>
+
+⑦：compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support:recyclerview-v7:25.3.1'
+    /* compile 'com.android.support:design:25.3.1'
+     compile 'com.android.support:cardview-v7:25.3.1'*/

@@ -1,0 +1,254 @@
+***************************************************avtivity 使用*********************************************************
+
+ /**
+     * 刷新监听。
+     */
+    private SwipeRefreshLayout.OnRefreshListener mOnRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
+        @Override
+        public void onRefresh() {
+            mSDRecyclerView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }, 2000);
+        }
+    };
+
+    /**
+     * 加载更多
+     */
+    private RecyclerView.OnScrollListener mOnScrollListener = new RecyclerView.OnScrollListener() {
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            // TODO 手指不能向上滑动了
+            if (!recyclerView.canScrollVertically(1)) {
+                // TODO 这里有个注意的地方，如果你刚进来时没有数据，但是设置了适配器，这个时候就会触发加载更多，需要开发者判断下是否有数据，如果有数据才去加载更多。
+
+                Toast.makeText(mContext, "加载更多...", Toast.LENGTH_SHORT).show();
+                initData();
+                mSDAdapter.notifyDataSetChanged();
+            }
+        }
+    };
+    /**
+     * 菜单创建器。在Item要创建菜单的时候调用。
+     */
+    private SwipeMenuCreator mSwipeMenuCreator = new SwipeMenuCreator() {
+        @Override
+        public void onCreateMenu(SwipeMenu swipeLeftMenu, SwipeMenu swipeRightMenu, int viewType) {
+            int width = getResources().getDimensionPixelSize(R.dimen.swipe_item_height);
+            // MATCH_PARENT 自适应高度，保持和内容一样高；也可以指定菜单具体高度，也可以用WRAP_CONTENT。
+            int height = ViewGroup.LayoutParams.MATCH_PARENT;
+            // 添加左侧的，如果不添加，则左侧不会出现菜单。
+            {
+                //swipeLeftMenu.addMenuItem(addItem); // 添加一个按钮到左侧菜单。
+
+                //swipeLeftMenu.addMenuItem(closeItem); // 添加一个按钮到左侧菜单。
+            }
+
+            // 添加右侧的，如果不添加，则右侧不会出现菜单。
+            {
+                SwipeMenuItem deleteItem = new SwipeMenuItem(mContext)
+                        .setBackgroundDrawable(R.drawable.selector_red)
+                        .setImage(R.mipmap.ic_action_delete)
+                        .setText("删除") // 文字，还可以设置文字颜色，大小等。。
+                        .setTextColor(Color.WHITE)
+                        .setWidth(width)
+                        .setHeight(height);
+                swipeRightMenu.addMenuItem(deleteItem);// 添加一个按钮到右侧侧菜单。
+
+                SwipeMenuItem addItem = new SwipeMenuItem(mContext)
+                        .setBackgroundDrawable(R.drawable.selector_green)
+                        .setText("添加")
+                        .setTextColor(Color.WHITE)
+                        .setWidth(width)
+                        .setHeight(height);
+                swipeRightMenu.addMenuItem(addItem); // 添加一个按钮到右侧菜单。
+            }
+        }
+    };
+
+    /**
+     * item单击事件监听。
+     */
+    private OnSDItemClickListener mOnItemClickListener = new OnSDItemClickListener() {
+        @Override
+        public void onItemClick(int position) {
+            Toast.makeText(mContext, "我是第" + position + "条。", Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    /**
+     * swipe菜单点击监听。
+     */
+    private OnSDMenuItemClickListener mMenuItemClickListener = new OnSDMenuItemClickListener() {
+        /**
+         * Item的菜单被点击的时候调用。
+         * @param closeable       closeable. 用来关闭菜单。
+         * @param adapterPosition adapterPosition. 这个菜单所在的item在Adapter中position。
+         * @param menuPosition    menuPosition. 这个菜单的position。比如你为某个Item创建了2个MenuItem，那么这个position可能是是 0、1，
+         * @param direction       如果是左侧菜单，值是：SwipeMenuRecyclerView#LEFT_DIRECTION，如果是右侧菜单，值是：SwipeMenuRecyclerView
+         *                        #RIGHT_DIRECTION.
+         */
+        @Override
+        public void onItemClick(Closeable closeable, int adapterPosition, int menuPosition, int direction) {
+            closeable.smoothCloseMenu();// 关闭被点击的菜单。
+
+            if (direction == SDRecyclerView.RIGHT_DIRECTION) {
+                // Toast.makeText(mContext, "list第" + adapterPosition + "; 右侧菜单第" + menuPosition, Toast.LENGTH_SHORT).show();
+            } else if (direction == SDRecyclerView.LEFT_DIRECTION) {
+                // Toast.makeText(mContext, "list第" + adapterPosition + "; 左侧菜单第" + menuPosition, Toast.LENGTH_SHORT).show();
+            }
+
+            // TODO 推荐调用Adapter.notifyItemRemoved(position)，也可以Adapter.notifyDataSetChanged();
+            if (menuPosition == 0) {
+                // 删除按钮被点击。
+                mList.remove(adapterPosition);
+                //  mMenuAdapter.notifyItemRemoved(adapterPosition);
+                mSDAdapter.notifyDataSetChanged();
+            }
+            if (menuPosition == 1) {
+                Toast.makeText(mContext, "swipe菜单第二模块", Toast.LENGTH_SHORT).show();
+            }
+            if (menuPosition == 2) {
+                Toast.makeText(mContext, "swipe菜单第三模块", Toast.LENGTH_SHORT).show();
+            }
+
+        }
+    };
+    /**
+     * Item拖拽事件监听
+     */
+    private OnItemMoveListener mOnItemMoveListener = new OnItemMoveListener() {
+        @Override
+        public boolean onItemMove(int fromPosition, int toPosition) {
+            // 当Item被拖拽的时候。
+            Collections.swap(mList, fromPosition, toPosition);
+            mSDAdapter.notifyItemMoved(fromPosition, toPosition);
+            return true;// 返回true表示处理了，返回false表示你没有处理。
+        }
+
+        @Override
+        public void onItemDismiss(int position) {
+            // 当Item被滑动删除掉的时候，在这里是无效的，因为这里没有启用这个功能。
+            // 使用Menu时就不用使用这个侧滑删除啦，两个是冲突的。
+        }
+    };
+
+    /**
+     * Item的拖拽/侧滑删除时，手指状态发生变化监听。
+     */
+    private OnItemStateChangedListener mOnItemStateChangedListener = new OnItemStateChangedListener() {
+        @Override
+        public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, @ActionStateMode int actionState) {
+            if (actionState == OnItemStateChangedListener.ACTION_STATE_DRAG) {
+                //"状态：拖拽";
+                // 拖拽的时候背景就透明了，这里我们可以添加一个特殊背景。
+                viewHolder.itemView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.white_pressed));
+            } else if (actionState == OnItemStateChangedListener.ACTION_STATE_SWIPE) {
+                //"状态：滑动删除";
+            } else if (actionState == OnItemStateChangedListener.ACTION_STATE_IDLE) {
+                //"状态：手指松开";
+                // 在手松开的时候还原背景。
+                ViewCompat.setBackground(viewHolder.itemView, ContextCompat.getDrawable(mContext, R.drawable.select_white));
+            }
+        }
+    };
+
+    // 初始化recyclerview
+    private void initView() {
+            // 刷新 加载监听器
+            mSwipeRefreshLayout.setOnRefreshListener(mOnRefreshListener);
+            // 布局管理器
+            LinearLayoutManager llm = new LinearLayoutManager(this);
+           // GridLayoutManager glm = new GridLayoutManager(this, 3);
+            //glm.setOrientation(GridLayoutManager.HORIZONTAL);
+            mSDRecyclerView.setLayoutManager(llm);
+            //mSDRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+            // 如果Item够简单，高度是确定的，打开FixSize将提高性能
+            mSDRecyclerView.setHasFixedSize(true);
+            // 设置Item默认动画，加也行，不加也行
+            mSDRecyclerView.setItemAnimator(new DefaultItemAnimator());
+            // 添加分割线
+            mSDRecyclerView.addItemDecoration(new ListViewDecoration(mContext));
+            //mSDRecyclerView.addItemDecoration(new GridViewDecoration(this, GridLayout.VERTICAL));
+
+            // 添加滚动监听
+            mSDRecyclerView.addOnScrollListener(mOnScrollListener);
+            // 设置菜单创建器。
+            mSDRecyclerView.setSwipeMenuCreator(mSwipeMenuCreator);
+            // 设置菜单Item点击监听。
+            mSDRecyclerView.setSwipeMenuItemClickListener(mMenuItemClickListener);
+            // 开启拖拽
+            mSDRecyclerView.setLongPressDragEnabled(true);
+            // 监听拖拽，更新UI。
+            mSDRecyclerView.setOnItemMoveListener(mOnItemMoveListener);
+            mSDRecyclerView.setOnItemStateChangedListener(mOnItemStateChangedListener);
+
+            mSDAdapter = new ListViewSDAdapter(mList);
+            mSDAdapter.setOnItemClickListener(mOnItemClickListener);
+            mSDRecyclerView.setAdapter(mSDAdapter);
+        }
+***************************************************adapter 使用*********************************************************
+public class ListViewAdapter<T> extends RecyclerView.Adapter<ListViewHolder> {
+    private Context mContext;
+    private List<T> mList;
+    private LayoutInflater mInflater;
+    private OnItemClickListener mOnItemClickListener;
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
+        this.mOnItemClickListener = onItemClickListener;
+    }
+
+    public ListViewAdapter(Context context, List<T> list) {
+        this.mContext = context;
+        this.mList = list;
+        mInflater = LayoutInflater.from(context);
+    }
+
+    @Override
+    public int getItemCount() {
+        return mList != null ? mList.size() : 0;
+    }
+
+    @Override
+    public ListViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = mInflater.inflate(R.layout.list_view_item, parent, false);
+        ListViewHolder viewHolder = new ListViewHolder(view);
+        return viewHolder;
+    }
+
+    @Override
+    public void onBindViewHolder(final ListViewHolder holder, final int position) {
+        ClickEvent(holder, position);
+        holder.mTv_list_view_item.setText(mList.get(position) + "");
+    }
+
+    protected void ClickEvent(final RecyclerView.ViewHolder holder, final int position) {
+        if (mOnItemClickListener != null) {
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mOnItemClickListener.setOnItemClickListener(holder.itemView, holder.getAdapterPosition());
+                }
+            });
+            holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    mOnItemClickListener.setOnItemLongClickListener(holder.itemView, holder.getAdapterPosition());
+                    return true;
+                }
+            });
+        }
+    }
+}
+
+class ListViewHolder extends RecyclerView.ViewHolder {
+    TextView mTv_list_view_item;
+
+    public ListViewHolder(View itemView) {
+        super(itemView);
+        mTv_list_view_item = (TextView) itemView.findViewById(R.id.tv_list_view_item);
+    }
+}
